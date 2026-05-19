@@ -139,7 +139,7 @@
     .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
     .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
       .hero { grid-template-columns: 1fr; padding: 48px 6%; }
       .hero-visual { display: none; }
       .steps, .leistungen-grid { grid-template-columns: 1fr; }
@@ -203,7 +203,7 @@
         <div class="step-icon-wrap">📋</div>
         <div class="step-num">Schritt 01</div>
         <h3>Daten mitteilen</h3>
-        <p>Teilen Sie uns einmalig die Geburtstage oder Eintrittsdaten Ihrer Mitarbeiter mit – das ist alles, was wir brauchen.</p>
+        <p>Teilen Sie uns einmalig die Geburtstage oder Eintrittsdaten Ihrer Mitarbeiter mit, das ist alles, was wir brauchen.</p>
       </div>
       <div class="step fade-in">
         <div class="step-icon-wrap">⚙️</div>
@@ -437,27 +437,28 @@
           <div class="form-row">
             <div class="form-group">
               <label>Vorname</label>
-              <input type="text" placeholder="Anna">
+              <input type="text" id="vorname" name="vorname" placeholder="Anna">
             </div>
             <div class="form-group">
               <label>Nachname</label>
-              <input type="text" placeholder="Müller">
+              <input type="text" id="nachname" name="nachname" placeholder="Müller">
             </div>
           </div>
           <div class="form-group">
             <label>Unternehmen</label>
-            <input type="text" placeholder="Muster AG">
+            <input type="text" id="unternehmen" name="unternehmen" placeholder="Muster AG">
           </div>
           <div class="form-group">
             <label>E-Mail</label>
-            <input type="email" placeholder="anna@muster.ch">
+            <input type="email" id="email" name="email" placeholder="anna@muster.ch">
           </div>
           <div class="form-group">
             <label>Nachricht</label>
-            <textarea placeholder="Wie kann Festbote helfen?"></textarea>
+            <textarea id="nachricht" name="nachricht" placeholder="Wie kann Festbote helfen?"></textarea>
           </div>
-          <button class="btn btn-primary" style="width:100%;" onclick="submitForm()">Nachricht senden</button>
+          <button class="btn btn-primary" style="width:100%;" onclick="submitForm(event)">Nachricht senden</button>
           <div class="form-success" id="form-success">✓ Vielen Dank! Wir melden uns bald bei dir.</div>
+          <div id="form-error" style="display:none; padding:16px; background:rgba(189,63,63,0.08); border-radius:2px; color:var(--red); font-size:15px; margin-top:16px; text-align:center;">⚠ Etwas ist schiefgelaufen. Bitte schreib uns direkt: festbote@outlook.com</div>
         </div>
       </div>
     </div>
@@ -479,23 +480,51 @@
 
 <script>
   function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-    const page = document.getElementById('page-' + id);
-    if (page) { page.classList.add('active'); window.scrollTo(0,0); }
-    const navLink = document.getElementById('nav-' + id);
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.nav-links a').forEach(function(a) { a.classList.remove('active'); });
+    var page = document.getElementById('page-' + id);
+    if (page) { page.classList.add('active'); window.scrollTo(0, 0); }
+    var navLink = document.getElementById('nav-' + id);
     if (navLink) navLink.classList.add('active');
   }
 
-  window.addEventListener('scroll', () => {
-    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 10);
-    document.querySelectorAll('.fade-in').forEach(el => {
+  window.addEventListener('scroll', function() {
+    var navbar = document.getElementById('navbar');
+    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 10);
+    document.querySelectorAll('.fade-in').forEach(function(el) {
       if (el.getBoundingClientRect().top < window.innerHeight - 60) el.classList.add('visible');
     });
   });
 
-  function submitForm() {
-    document.getElementById('form-success').style.display = 'block';
+  function submitForm(e) {
+    e.preventDefault();
+    var vorname = document.getElementById('vorname').value;
+    var nachname = document.getElementById('nachname').value;
+    var unternehmen = document.getElementById('unternehmen').value;
+    var email = document.getElementById('email').value;
+    var nachricht = document.getElementById('nachricht').value;
+
+    fetch('https://formspree.io/f/mredbjed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ vorname: vorname, nachname: nachname, unternehmen: unternehmen, email: email, nachricht: nachricht })
+    })
+    .then(function(response) {
+      if (response.ok) {
+        document.getElementById('form-success').style.display = 'block';
+        document.getElementById('form-error').style.display = 'none';
+        document.getElementById('vorname').value = '';
+        document.getElementById('nachname').value = '';
+        document.getElementById('unternehmen').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('nachricht').value = '';
+      } else {
+        document.getElementById('form-error').style.display = 'block';
+      }
+    })
+    .catch(function() {
+      document.getElementById('form-error').style.display = 'block';
+    });
   }
 </script>
 </body>
